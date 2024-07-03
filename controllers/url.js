@@ -2,43 +2,36 @@ const dns = require('dns');
 
 
 let shorturls = [];
+let shorturlIndex;
 
-const dnsCheck = async (url) => {
-  let reply;
-  console.log("Inside DNSCheck")
-  await dns.lookup(url, (err,add) =>{
-    console.log("address",add)
-    if(err) {
-      console.error(err)
-      return { "error" : "Invalid"}
-    } else {
-      console.log("DNS found")
-      shorturls.push(url)
-      let shorturlIndex = shorturls.indexOf(url) + 1;
-      console.log("shorturls",shorturls)
-      return {
-        "original_url" : url,
-        "short_url" : shorturlIndex
+
+//DNS LOOKUP AND RETURN JSON RESPONSE
+const dnsCheck = (url) => {
+  return new Promise((resolve, reject) => {
+    dns.lookup(url, (err, add) => {
+      if (err) {
+        console.error(err);
+        reject({ "error": "invalid URL" });
+      } else {
+        console.log("DNS found", add);
+        if(!shorturls.includes(url)){
+          resolve(createShortUrl(url));
+        } else {
+          resolve({"error" : "Already exists"})
+        }
       }
-    }
-  })
-  .then(reply => {console.log("reply",reply)})
-  .catch(err => {console.log("Error looking up")})
-  
-  //if(!reply) console.log("error INVALIS")
-
+    });
+  });
 }
 
-
+//CREATING SHORTURL
 const createShortUrl = (url) => {
   shorturls.push(url)
-  let shorturlIndex = shorturls.indexOf(url) + 1;
-  console.log(shorturls)
+  shorturlIndex = shorturls.indexOf(url) + 1;
   return {
     "original_url" : url,
     "short_url" : shorturlIndex
   }
 }
 
-
-module.exports = dnsCheck
+module.exports= { dnsCheck, shorturls}
